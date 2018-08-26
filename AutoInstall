@@ -1,0 +1,272 @@
+#!/bin/bash
+#########################################
+#Function:    Auto_install all 
+#Usage:       su root & bash AutoInstall.sh
+#Company:     MOREVFX.IT
+#Version:     1.1
+#########################################
+vnc_xstartup=/root/.vnc/xstartup
+vnc_sysconfig_vncservers=/etc/sysconfig/vncservers
+selinux_config=/etc/selinux/config
+rc_local=/etc/rc.local
+password=xxxxxxxxxx
+
+#check lock file  
+LOCKfile=/tmp/.$(basename $0)
+if [ -f "$LOCKfile" ]
+then
+  echo -e "\033[1;40;31m The script is already run finished.\n\033[0m"
+  exit
+else
+  echo -e "\033[40;32m Step_1. Now,begin to create lock file and Run.\n\033[40;37m"
+  touch $LOCKfile
+fi
+
+#check user
+if [ $(id -u) != "0" ]
+then
+  echo -e "\033[1;40;31mError: Use root to install this script.\n\033[0m"
+  rm -f $LOCKfile
+  exit 1
+fi
+
+echo -e "\033[40;32mStep_2. Check the OS Version.\n\033[40;37m"
+os_release=$(check_os_release)
+if [ "$os_release" == "" ]
+then
+  echo -e "\033[1;40;31mThe OS does not support.\n\033[0m"
+  rm -f $LOCKfile
+  exit 0
+fi
+
+echo -e "\033[40;32mStep_3.Config_yum_repo_Server and update.\n\033[40;37m"
+case "$os_release" in
+redhat7|centos7)
+  modify_rhel7_yum
+  ;;
+redhat6|centos6)
+  modify_rhel6_yum
+  ;;
+esac
+
+echo -e "\033[40;32mStep_4.Install vnc server.\n\033[40;37m"
+case "$os_release" in
+redhat7|centos7)
+  centos7_install_vnc_server $os_release
+  ;;
+redhat6|centos6)
+  centos6_install_vnc_server $os_release
+  ;;
+esac
+
+echo -e "\033[40;32mStep_5.mount X Y P D E.\n\033[40;37m"
+
+echo -e "\033[40;32mStep_6.Performance_Optimization.\n\033[40;37m"
+
+echo -e "\033[40;32mStep_7.install BaseLib & Update Kernel.\n\033[40;37m"
+
+echo -e "\033[40;32mStep_8.install Software .\n\033[40;37m"
+
+echo -e "\033[40;32mStep_9.Join Nis .\n\033[40;37m"
+
+echo -e "\033[40;32mStep_10.install NvidiaDrivers .\n\033[40;37m"
+
+echo -e "\033[40;32m.Install finished.\n\033[40;37m"
+rm -f $LOCKfile
+
+#-------以下是功能模块----------------
+check_os_release()
+{
+  while true
+  do
+    os_release=$(grep "Red Hat Enterprise Linux Server release" /etc/issue 2>/dev/null)
+    os_release_2=$(grep "Red Hat Enterprise Linux Server release" /etc/redhat-release 2>/dev/null)
+    if [ "$os_release" ] && [ "$os_release_2" ]
+    then
+      if echo "$os_release"|grep "release 7" >/dev/null 2>&1
+      then
+        os_release=redhat7
+        echo "$os_release"
+      elif echo "$os_release"|grep "release 6" >/dev/null 2>&1
+      then
+        os_release=redhat6
+        echo "$os_release"
+      else
+        os_release=""
+        echo "$os_release"
+      fi
+      break
+    fi
+    os_release=$(grep "CentOS release" /etc/issue 2>/dev/null)
+    os_release_2=$(grep "CentOS release" /etc/*release 2>/dev/null)
+    if [ "$os_release" ] && [ "$os_release_2" ]
+    then
+      if echo "$os_release"|grep "release 7" >/dev/null 2>&1
+      then
+        os_release=centos7
+        echo "$os_release"
+      elif echo "$os_release"|grep "release 6" >/dev/null 2>&1
+      then
+        os_release=centos6
+        echo "$os_release"
+      else
+        os_release=""
+        echo "$os_release"
+      fi
+      break
+    fi
+    
+    done
+}
+
+check_selinux_config()
+{
+  if grep "SELINUX=enforcing" $selinux_config >/dev/null 2>&1
+  then
+    setenforce 0
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/' $selinux_config
+  fi
+}
+
+exit_script()
+{
+  echo -e "\033[1;40;31mInstall $1 error,Now exit.\n\033[0m"
+  rm -f $LOCKfile
+  exit 1
+}
+
+modify_rhel6_yum()
+{
+  rpm --import http://mirrors.163.com/centos/RPM-GPG-KEY-CentOS-6
+  cd /etc/yum.repos.d/
+  wget http://mirrors.163.com/.help/CentOS-Base-163.repo -O CentOS-Base-163.repo
+  sed -i '/mirrorlist/d' CentOS-Base-163.repo
+  sed -i '/\[addons\]/,/^$/d' CentOS-Base-163.repo
+  sed -i 's/\$releasever/6/' CentOS-Base-163.repo
+  sed -i 's/RPM-GPG-KEY-CentOS-5/RPM-GPG-KEY-CentOS-6/' CentOS-Base-163.repo
+  yum clean metadata
+  yum makecache
+  cd ~
+}
+
+modify_rhel7_yum()
+{
+  rpm --import http://mirrors.163.com/centos/RPM-GPG-KEY-CentOS-7
+  cd /etc/yum.repos.d/
+  wget http://mirrors.163.com/.help/CentOS-Base-163.repo -O CentOS-Base-163.repo
+  sed -i '/mirrorlist/d' CentOS-Base-163.repo
+  sed -i '/\[addons\]/,/^$/d' CentOS-Base-163.repo
+  sed -i 's/\$releasever/7/' CentOS-Base-163.repo
+  sed -i 's/RPM-GPG-KEY-CentOS-5/RPM-GPG-KEY-CentOS-7/' CentOS-Base-163.repo
+  yum clean metadata
+  yum makecache
+  cd ~
+}
+
+centos6_install_vnc_server()
+{
+  if yum grouplist "X Window System"|grep "Available" >/dev/null 2>&1
+  then
+    if ! yum groupinstall "X Window System" -y
+    then
+      exit_script "X Window System"
+    fi
+  fi
+  if yum grouplist "Desktop"|grep "Available" >/dev/null 2>&1
+  then
+    if ! yum groupinstall "Desktop" -y
+    then
+      exit_script Desktop
+    fi
+  fi
+  if yum grouplist "Chinese Support"|grep "Available" >/dev/null 2>&1
+  then
+    if ! yum groupinstall "Chinese Support" -y
+    then
+      exit_script "Chinese Support"
+    fi
+  fi
+  
+  if ! rpm -q tigervnc-server >/dev/null 2>&1
+  then
+    if ! yum install tigervnc-server -y
+    then
+      exit_script tigervnc-server
+    fi
+    vncserver <<EOF
+$password
+$password
+EOF
+  else
+    vncpasswd <<EOF
+$password
+$password
+EOF
+  fi
+  vncserver -kill :2
+  sed -i 's/.*!= root.*/#&/' /etc/pam.d/gdm 
+  dbus-uuidgen >/var/lib/dbus/machine-id
+  service ipstables stop
+  service vncserver stop
+
+  #配置 vncserver
+  echo 'VNCSERVERS="2:root"' >>$vnc_sysconfig_vncservers
+  echo 'VNCSERVERARGS[2]="-geometry 1024x768"' >>$vnc_sysconfig_vncservers
+  #配置vncserver的root桌面
+  sed -i "s/xterm/#xterm/" $vnc_xstartup
+  sed -i "s/twm/#twm /"  $vnc_xstartup
+  echo "gnome-session &" >>$vnc_xstartup
+  chmod 777 $vnc_xstartup
+
+  chkconfig vncserver on
+  chkconfig iptables off
+  chkconfig ip6tables off
+  check_selinux_config
+  service vncserver start
+ 
+}
+
+centos7_install_vnc_server()
+{
+  
+  if yum grouplist "Desktop"|grep "Available" >/dev/null 2>&1
+  then
+    if ! yum groupinstall "GNOME Desktop" "X Window System" "Desktop" -y
+    then
+      exit_script Desktop
+    fi
+  fi
+  if  yum list kde-l10n-Chinese |grep "Available" >/dev/null 2>&1
+  then
+    if ! yum install kde-l10n-Chinese -y
+    then
+      exit_script "Chinese Support"
+    fi
+  fi
+  
+  if ! rpm -q tigervnc-server >/dev/null 2>&1
+  then
+    if ! yum install tigervnc tigervnc-server tigervnc-server-module -y
+    then
+      exit_script tigervnc-server
+    fi
+  fi
+#vncserver配置
+\cp /lib/systemd/system/vncserver@.service /etc/systemd/system/vncserver@\:2.service
+sed -i '/ExecStart/s/<USER>/root/g' /etc/systemd/system/vncserver@\:2.service
+sed -i '/PIDFile/s/home\/<USER>/root/g' /etc/systemd/system/vncserver@\:2.service
+sed -i 's/#vnc_password/vnc_password /g' /etc/libvirt/qemu.conf
+sed -i 's/XYZ12345/'"$password"' /g' /etc/libvirt/qemu.conf
+\rm -rf /tmp/.X11-unix/*
+systemctl daemon-reload
+    vncpasswd <<EOF
+$password
+$password
+EOF
+
+check_selinux_config
+systemctl stop firewalld
+systemctl enable vncserver@:2.service
+systemctl restart vncserver@:2.service
+systemctl enable vncserver@:2.service
+}
