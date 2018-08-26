@@ -9,7 +9,7 @@ vnc_xstartup=/root/.vnc/xstartup
 vnc_sysconfig_vncservers=/etc/sysconfig/vncservers
 selinux_config=/etc/selinux/config
 rc_local=/etc/rc.local
-password=more@2018
+password=XXXXXXX
 
 #check lock file  
 LOCKfile=/tmp/.$(basename $0)
