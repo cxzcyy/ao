@@ -270,3 +270,26 @@ systemctl enable vncserver@:2.service
 systemctl restart vncserver@:2.service
 systemctl enable vncserver@:2.service
 }
+
+maya_install() {
+#cd /sw/tmp/chen-1/Autodesk_Maya_2016_EXT1_SP6_EN_Linux_64bit/
+#./setup --serial_number=666-69696969 --product_key=657h1 --license_type=kNetwork --server_name=lic.gsvfx.com --noui
+#cp /sw/tmp/chen-1/maya.lic /var/flexlm/maya.lic
+#cp /usr/autodesk/maya2016/desktop/Autodesk-Maya.desktop /usr/share/applications/Autodesk-Maya2016.desktop
+}
+
+Nuke_install() {
+mkdir Nuke10.5v7
+cp /sw/tmp/chen-1/Nuke10.5v7-linux-x86-release-64-installer /usr/local/Nuke10.5v7/
+cd /usr/local/Nuke10.5v7
+unzip Nuke10.5v7-linux-x86-release-64-installer
+mkdir -p /usr/local/foundry/RLM
+\cp /sw/tmp/chen-1/foundry_client.lic /usr/local/foundry/RLM
+\cp /sw/tmp/chen-1/MORE_desktop/*.desktop /root/Desktop/
+}
+
+houdini_install() {
+/sw/tmp/chen-1/houdini-16.5.571-linux_x86_64_gcc4.8/houdini.install --auto-install --install-houdini --install-menus --install-engine-maya --install-bin-symlink --install-hfs-symlink --install-license --accept-EULA
+touch /root/.sesi_licenses.pref
+echo "serverhost=lic.xxx.com" >>/root/.sesi_licenses.pref
+}
