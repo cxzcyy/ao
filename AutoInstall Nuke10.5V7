@@ -1,0 +1,16 @@
+#!/bin/bash
+#########################################
+#Function:    AutoInstall Nuke10.5V7  
+#Company:     MOREVFX.IT_chen
+#Version:     1.0
+#########################################
+
+mkdir /usr/local/Nuke10.5v7
+cp /sw/tmp/chen-1/Nuke10.5v7-linux-x86-release-64-installer /usr/local/Nuke10.5v7/
+cd /usr/local/Nuke10.5v7
+unzip Nuke10.5v7-linux-x86-release-64-installer
+mkdir -p /usr/local/foundry/RLM
+\cp /sw/tmp/chen-1/foundry_client.lic /usr/local/foundry/RLM
+\cp /sw/tmp/chen-1/*.desktop /root/Desktop/
+
+#ln -s  
