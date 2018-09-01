@@ -8,6 +8,10 @@
 
 maya2018_install()
 {
+if [ -f  "/usr/autodesk/maya2018/bin/maya" ];then
+	exit_script "this system has installed maya2018"
+	exit 0
+fi
 #卸载已安装早期版本的 AdLM for Linux，
 if [ rpm -qa | egrep 'adlm' ];then
       rpm -e adlm*
