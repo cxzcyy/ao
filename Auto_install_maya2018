@@ -16,10 +16,13 @@ cd $maya_rpm_path
 rpm -ivh Maya2018_64-2018.0-#.x86_64.rpm adlmapps11-11.0.15-0.x86_64.rpm adlmflexnetclient-14.#.x86_64.rpm
 #若要同时安装 Maya 与 Mudbox，请输入：rpm -ivh --force Maya2018_64-2018.0-#.x86_64.rpm adlmapps11-11.0.15-0.x86_64.rpm adlmflexnetclient-14.#.x86_64.rpm 
 
+
 #创建 License相关文件
+if [ ! -f "/var/flexlm/maya.lic" ];then
 echo "MAYA_LICENSE_METHOD=network" >/usr/autodesk/maya2018/bin/License.env
 echo "SERVER mlic.more.com 0" >/var/flexlm/maya.lic
 echo "USE_SERVER" >>/var/flexlm/maya.lic
+fi
 #检查OpenGL 驱动程序
 if [ ! -f "/usr/bin/glxinfo" ];then
       yum install glx-utils -yum
