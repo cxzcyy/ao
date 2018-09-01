@@ -1,0 +1,57 @@
+#!/bin/bash
+#########################################
+#Function:    du project size for user 
+#Usage:       ./duProject_L6.sh /export/MORE_ORACLE/work/TWE >/dev/null &
+#Company:     MOREVFX.IT
+#Version:     1.2
+#########################################
+export DU_DIR_PATH=`basename $1`
+
+for fileL1 in `ls $1`
+    do
+        if [ -d $1"/"$fileL1 ]
+        then
+                        echo `du -sh  $1"/"$fileL1` >>/export/MORE_ORACLE/TD/IT/doc_sh/$DU_DIR_PATH.log
+
+                        for fileL2 in `ls $1"/"$fileL1`
+                        do
+                                if [ -d $1"/"$fileL1"/"$fileL2 ]
+                                then
+                                        echo `du -sh  $1"/"$fileL1"/"$fileL2` >>/export/MORE_ORACLE/TD/IT/doc_sh/$DU_DIR_PATH.log
+
+                                for fileL3 in `ls $1"/"$fileL1"/"$fileL2`
+                                do
+                                        if [ -d $1"/"$fileL1"/"$fileL2"/"$fileL3 ]
+                                        then
+                                                echo `du -sh  $1"/"$fileL1"/"$fileL2"/"$fileL3` >>/export/MORE_ORACLE/TD/IT/doc_sh/$DU_DIR_PATH.log
+
+                                                for fileL4 in `ls $1"/"$fileL1"/"$fileL2"/"$fileL3`
+                                                do
+                                                        if [ -d $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4 ]
+                                                        then
+                                                                echo `du -sh  $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4` >>/export/MORE_ORACLE/TD/IT/doc_sh/$DU_DIR_PATH.log
+
+                                                                        for fileL5 in `ls $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4`
+                                                                        do
+                                                                                if [ -d $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4"/"$fileL5 ]
+                                                                                then
+                                                                                        echo `du -sh  $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4"/"$fileL5` >>/export/MORE_ORACLE/TD/IT/doc_sh/$DU_DIR_PATH.log
+                                                                                                for fileL6 in `ls $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4"/"$fileL5`
+                                                                                                do
+                                                                                                        if [ -d $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4"/"$fileL5"/"$fileL6 ]
+                                                                                                        then
+                                                                                                        echo `du -sh  $1"/"$fileL1"/"$fileL2"/"$fileL3"/"$fileL4"/"$fileL5"/"$fileL6` >>/export/MORE_ORACLE/TD/IT/doc_sh/$DU_DIR_PATH.log
+
+                                                                                                        fi
+                                                                                        done
+                                                                                fi
+                                                                        done
+                                                        fi
+                                                done
+                                        fi
+                                done
+                                fi
+                        done
+        fi
+    done
+
