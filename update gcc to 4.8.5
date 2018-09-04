@@ -2,11 +2,17 @@
 #########################################
 #Function:    update gcc to 4.8.5  
 #Company:     MOREVFX.IT_chen
-#Version:     1.0
+#Version:     1.1
 #########################################
+
+
+rm -rf  /usr/local/gcc4.8.5
 cp -r /sw/tmp/chen-1/gcc4.8.5/ /usr/local/
 cd /usr/local/gcc4.8.5/
 ./contrib/download_prerequisites
-cd gcc-build/
-../configure -enable-checking=release -enable-languages=c,c++ -disable-multilib
-make -j16 && make instal
+mkdir ../gcc-build-4.8.5
+cd ../gcc-build/
+ ../gcc4.8.5/configure --prefix=/usr/local/gcc -enable-checking=release -enable-languages=c,c++ -disable-multilib --build=x86_64-linux
+make -j16 && make install
+echo "export PATH=/usr/local/gcc/bin:$PATH" >>/root/.bashrc
+source /root/.bashrc
