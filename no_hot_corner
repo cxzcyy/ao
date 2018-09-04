@@ -1,0 +1,9 @@
+#!/bin/bash
+#关闭左上角切换到窗口热区
+
+yum install gnome-tweak-tool
+yum -y install gnome-shell-extension-no-hot-corner
+
+
+#use the gnome Tweak Tool to enable the "No topleft hot corner"extension
+#重启 Gnome Shell 按键盘 Alt+F2, 然后输入 r 回车就可以了
