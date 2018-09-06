@@ -1,0 +1,19 @@
+
+
+cd $maya2016_install_dir
+
+rpm -Uvh adlmapps11-11.0.15-0.x86_64.rpm
+rpm -ivh adlmflexnetclient-11.0.15-0.x86_64.rpm
+rpm -ivh Maya2016_64-2016.0-2775.x86_64.rpm
+echo "MAYA_LICENSE=unlimited " >/usr/autodesk/maya2016/bin/License.env
+echo "MAYA_LICENSE_METHOD=network" >>/usr/autodesk/maya2016/bin/License.env
+echo 'SERVER $lic_server 0' >/var/flexlm/maya.lic
+echo 'USE_SERVER' >>/var/flexlm/maya.lic
+export LD_LIBRARY_PATH=/opt/Autodesk/Adlm/R11/lib64/
+echo "LD_LIBRARY_PATH=/opt/Autodesk/Adlm/R11/lib64" >>/etc/profile 
+/usr/autodesk/maya2016/bin/adlmreg -i N 657h1 657h1 2016.0.0.f 666-69696969 /var/opt/Autodesk/Adlm/Maya2016/MayaConfig.pit 
+\cp /lib64/libssh2.so.1 /opt/Autodesk/Adlm/R11/lib64/
+\cp /lib64/libldap-2.4.so.2 /opt/Autodesk/Adlm/R11/lib64/
+\cp /lib64/libssl.so.10 /opt/Autodesk/Adlm/R11/lib64/
+\cp /lib64/libcrypto.so.10 /opt/Autodesk/Adlm/R11/lib64/
+\cp /$maya2016_install_dir/Autodesk_Crack/libadlmint.so.11.0.15 /usr/autodesk/maya2016/lib/
