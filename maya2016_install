@@ -1,4 +1,10 @@
-
+#!/bin/bash
+#########################################
+#Function:    Auto_install_maya2016 
+#Usage:       su root & bash  maya2016_install.sh
+#Company:     MOREVFX.IT
+#Version:     1.0
+#########################################
 
 cd $maya2016_install_dir
 
