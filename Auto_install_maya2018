@@ -12,18 +12,18 @@ if [ -f  "/usr/autodesk/maya2018/bin/maya" ];then
 	exit_script "this system has installed maya2018"
 	exit 0
 fi
-#卸载已安装早期版本的 AdLM for Linux，
-if [ rpm -qa | egrep 'adlm' ];then
-      rpm -e adlm*
-fi
+
 cd $maya_rpm_path
-rpm -ivh Maya2018_64-2018.0-#.x86_64.rpm adlmapps11-11.0.15-0.x86_64.rpm adlmflexnetclient-14.#.x86_64.rpm
+rpm -ivh Maya2018_64-2018.0-#.x86_64.rpm 
+rpm -Uvh adlmapps11-11.0.15-0.x86_64.rpm 
+rpm -ivh adlmflexnetclient-14.#.x86_64.rpm
 #若要同时安装 Maya 与 Mudbox，请输入：rpm -ivh --force Maya2018_64-2018.0-#.x86_64.rpm adlmapps11-11.0.15-0.x86_64.rpm adlmflexnetclient-14.#.x86_64.rpm 
 
 
 #创建 License相关文件
 if [ ! -f "/var/flexlm/maya.lic" ];then
-echo "MAYA_LICENSE_METHOD=network" >/usr/autodesk/maya2018/bin/License.env
+echo "MAYA_LICENSE=657j1 " >/usr/autodesk/maya2018/bin/License.env
+echo "MAYA_LICENSE_METHOD=network" >>/usr/autodesk/maya2018/bin/License.env
 echo "SERVER mlic.more.com 0" >/var/flexlm/maya.lic
 echo "USE_SERVER" >>/var/flexlm/maya.lic
 fi
@@ -37,6 +37,7 @@ if [ ! -h "/usr/autodesk/maya2018/lib/libXm.so" ];then
 fi
 #将 /opt/Autodesk/Adlm/R14/lib64/ 添加到 LD_LIBRARY_PATH，为此会话设置共享库
 export LD_LIBRARY_PATH=/opt/Autodesk/Adlm/R14/lib64/
+echo "LD_LIBRARY_PATH=/opt/Autodesk/Adlm/R14/lib64/">> /etc/profile
 #注册 Maya2018
 if [ ! -f /var/opt/Autodesk/Adlm/Maya2018/MayaConfig.pit ];then
 /usr/autodesk/maya2018/bin/adlmreg -i N 657J1 657J1 2018.0.0.F 666-69696969 /var/opt/Autodesk/Adlm/Maya2018/MayaConfig.pit >/tmp/maya2018_install.log
