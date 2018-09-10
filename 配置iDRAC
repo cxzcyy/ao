@@ -1,29 +1,33 @@
-#RHEL 系统环境iDRAC 命令工具包：
-
+#Centos 系统环境iDRAC 命令工具包：
 #Dell EMC OpenManage Linux Remote Access Utilities :http://www.dell.com/support/home/cn/zh/cndhs1/drivers/driversdetails?driverId=49T1M
-#解决net-snmp-utils包的依赖关系在执行此目录下的rpm包安装/root/linux/rac/RHEL7/x86_64，然后软链接
-#物理机环境：安装在物理机环境后，可直接 # racadm command查看和修改iDRAC配置,虚拟机环境：安装在虚拟机环境后，需 -r IP #racadm -r 192.168.1.1 -u User -p ‘Password‘ command 查看和修改iDRAC配置
+#已经下载好，放到服务器上的Y:\BAK-Y\软件-Software\baseIT\IPMI\iDrac_dell目录下
+yum -y install net-snmp-utils
+\cp -rf /media/Y/BAK-Y/Software/baseIT/IPMI/iDrac_dell /home
+cd /home/iDrac_dell
+tar xf OM-MgmtStat-Dell-Web-LX-9.1.0-2771_A00.tar 
+cd /home/iDrac_dell/linux/rac/RHEL7/x86_64
+yum -y localinstall *.rpm
+ln -s /opt/dell/srvadmin/sbin/racadm /usr/local/sbin/racadm
+#安装在物理机环境，可直接 # racadm command查看和修改iDRAC配置,安装在虚拟机环境，需#racadm -r 192.168.20.X -u admin -p ‘XXXX‘ command 查看和修改iDRAC配置
 #iDRAC 常用命令
-#创建、删除、赋权用户的操作
+#1、创建、删除、赋权用户的操作
 racadm config -g cfgUserAdmin -o cfgUserAdminUserName -i 20 more           #创建索引10的more用户1
 racadm config -g cfgUserAdmin -o cfgUserAdminPassword -i 20 ‘xxxxx‘      #给创建的more用户设置密码
 # racadm set iDRAC.Users.10.Password ‘NewPassword‘                                         #更改用户密码
 racadm config -g cfgUserAdmin -i 10 -o cfgUserAdminEnable 1                           #启用用户<1表示启用，0表示禁用>
 # racadm config -g cfgUserAdmin -o cfgUserAdminUserName -i 10                       # 删除用户
 racadm config -g cfgUserAdmin -o cfgUserAdminPrivilege -i 10 4                         #赋予User01用户超级管理员权限
-
-物理机重启、关机等操作
+#2、物理机重启、关机等操作
 # racadm serveraction powerup                                               开启服务器
 # racadm serveraction powerdown                                          关闭服务器
 # racadm serveraction powercycle                                           关机后再开启服务器
 # racadm serveraction powerstatus                                         查看服务器状态
-
-iDRAC 重启操作
+#3、iDRAC 重启操作
 # racadm racreset soft                                                             软重启iDRAC
 # racadm racreset hard                                                            硬重启iDRAC
 # racadm racreset soft -f                                                          强制软重启iDRAC
 # racadm racreset hard -f                                                         强制硬重启iDRAC
-
+#4、设置iDRAC 的IP地址
 # racadm set iDRAC.IPv4.Address x.x.x.x                              修改IP地址
 # racadm set iDRAC.IPv4.Netmask x.x.x.x                             修改子网掩码
 # racadm set iDRAC.IPv4.Gateway x.x.x.x                             修改默认网关<无需重启idrac，配置即生效>
