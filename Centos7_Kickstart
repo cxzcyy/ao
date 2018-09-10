@@ -1,0 +1,99 @@
+#platform=x86, AMD64, or Intel EM64T
+# System authorization information
+auth  --useshadow  --enablemd5
+# System bootloader configuration
+bootloader --location=mbr
+# Partition clearing information
+clearpart --all --initlabel
+# Use text mode install
+graphical
+# Firewall configuration
+firewall --disabled
+# Run the Setup Agent on first boot
+firstboot --disable
+# System keyboard
+keyboard us
+# System language
+lang zh_CN.UTF-8
+# Use network installation
+url --url=$tree
+# If any cobbler repo definitions were referenced in the kickstart profile, include them here.
+$yum_repo_stanza
+# Network information
+network --bootproto=dhcp
+# Reboot after installation
+reboot
+#End User License Agreement 
+eula --agreed
+#Root password
+rootpw --iscrypted $6$9teqzkqZfkDiZ9yK$11iugnq8gDBTq1/tQOIvfey1nak5rRXRjKFUY3/z2jXfeyMXxj9gB4qh6vBbKrSeulPxFjKgwl2l/H.oezOSX/
+user --name=it --password=$6$IAcyQMUsP0pw7ZUm$u5.1jDd70HSYx2swDXANFOQmVFsrN2gXXAbr3CWgPhsXs.27nPQmfTGy8hAry6mD36JvGfeWVcghnG.AQAySS1 --iscrypted --gecos="it"
+
+# SELinux configuration
+selinux --disabled
+# Do not configure the X Window System
+xconfig --startxonboot
+# System timezone
+timezone  Asia/Shanghai
+# Install OS instead of upgrade
+install
+# Clear the Master Boot Record
+zerombr
+
+# System bootloader configuration
+#bootloader --append=" crashkernel=auto" --location=mbr --boot-drive=sda
+bootloader --location=mbr
+
+# Allow anaconda to partition the system as needed
+#autopart
+# Disk partitioning information
+part /boot --asprimary --fstype="ext4" --ondisk=sda --size=1024
+part swap --fstype="swap" --ondisk=sda --size=65536
+part / --asprimary --fstype="ext4" --grow --size=1
+
+
+%packages
+@^gnome-desktop-environment
+@base
+@compat-libraries
+@core
+@desktop-debugging
+@development
+@dial-up
+@directory-client
+@fonts
+@gnome-apps
+@gnome-desktop
+@guest-agents
+@guest-desktop-agents
+@input-methods
+@internet-applications
+@internet-browser
+@java-platform
+@legacy-x
+@multimedia
+@network-file-system-client
+@networkmanager-submodules
+@office-suite
+@print-client
+@security-tools
+@x11
+chrony
+kexec-tools
+-gnome-initial-setup
+rsync
+
+%end
+
+%post %post --interpreter=bin/bash --logfile /root/ks-post.log 
+mkdir /media/{X,Y,D,E,P}
+echo "mount -t nfs -o nolock,noatime,nodiratime 192.168.16.10:/export/MORE_ORACLE /media/X" >>/etc/rc.d/rc.local
+echo "mount -t nfs -o nolock,noatime,nodiratime 192.168.17.10:/mnt/Freenas/Work /media/Y" >>/etc/rc.d/rc.local
+echo "mount -t nfs -o nolock,noatime,nodiratime 192.168.16.10:/export/MORE_ORACLE/TD/PLE2 /media/P" >>/etc/rc.d/rc.local
+sed -i '/#Domain/a\Domain = more.com'/etc/idmapd.conf
+chmod +x /etc/rc.d/rc.local
+chmod +x /etc/rc.local
+bash /etc/rc.d/rc.local
+echo "sh /media/X/TD/IT/IT-SYSTEM/init/Cobbler_AutoInstall/Render_AutoInstall.sh" >>/etc/rc.d/rc.local
+
+%end
