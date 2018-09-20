@@ -95,5 +95,6 @@ chmod +x /etc/rc.d/rc.local
 chmod +x /etc/rc.local
 bash /etc/rc.d/rc.local
 echo "sh /media/X/TD/IT/IT-SYSTEM/init/Cobbler_AutoInstall/Render_AutoInstall.sh" >>/etc/rc.d/rc.local
+#openvt -s -w -- /media/X/TD/IT/IT-SYSTEM/init/Cobbler_AutoInstall/WorkStation_AutoInstall.sh
 
 %end
