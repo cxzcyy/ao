@@ -1,0 +1,198 @@
+#系统设置
+setenforce 0 
+sed -i  
+systemctl stop firewalld
+
+# 修改字符集
+localedef -c -f UTF-8 -i zh_CN zh_CN.UTF-8
+export LC_ALL=zh_CN.UTF-8
+echo 'LANG="zh_CN.UTF-8"' > /etc/locale.conf
+
+#安装依赖包
+yum -y install wget vim sqlite-devel xz gcc automake zlib-devel openssl-devel epel-release git
+
+#编译安装python3环境
+wget https://www.python.org/ftp/python/3.6.1/Python-3.6.1.tar.xz
+tar xvf Python-3.6.1.tar.xz  && cd Python-3.6.1
+./configure --prefix=/usr/python3 && make && make install
+
+ln -s /usr/python3/bin/python3 /usr/bin/python3
+ln -s /usr/python3/bin/pip3 /usr/bin/pip3
+
+
+cd /opt
+python3 -m venv py3
+source /opt/py3/bin/activate
+
+git clone https://github.com/kennethreitz/autoenv.git
+echo 'source /opt/autoenv/activate.sh' >> ~/.bashrc
+source ~/.bashrc
+
+#自动载入 Python 虚拟环境配置
+cd /opt/
+git clone https://github.com/jumpserver/jumpserver.git && cd jumpserver && git checkout master
+echo "source /opt/py3/bin/activate" > /opt/jumpserver/.env 
+cd jumpserver
+
+#安装依赖 RPM 包
+cd /opt/jumpserver/requirements
+yum -y install $(cat rpm_requirements.txt) 
+#安装 Python 库依赖
+pip install -r requirements.txt -i https://pypi.python.org/simple
+#安装 Redis
+yum -y install redis
+systemctl enable redis
+systemctl start redis
+
+#安装 mysql5.7
+cd /usr/local
+wget http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+rpm -ivh mysql57-community-release-el7-7.noarch.rpm
+yum install mysql-community mysql-community-server mysql-community-devel 
+systemctl enable mysqlb
+systemctl start mysqlb
+cat /var/log/mysqld.log | grep password
+
+mysql -uroot -p 
+>set password for root@localhost = password('More@MySQL5.7_2018-09-27{Pm]');
+>flush privileges;
+> select user();
+> ALTER USER USER() IDENTIFIED BY 'More@MySQL5.7_2018-09-27{Pm]';
+> create database jumpserver default charset 'utf8';
+> grant all on jumpserver.* to 'jumpserver'@'127.0.0.1' identified by 'More@MySQL5.7_2018-09-27{Pm]';
+> flush privileges;
+
+#修改 Jumpserver 配置文件
+
+cd /opt/jumpserver
+cp config_example.py config.py
+vim config.py
+
+# 生成数据库表结构和初始化数据
+cd /opt/jumpserver/utils
+bash make_migrations.sh
+
+#运行 Jumpserver
+cd /opt/jumpserver
+./jms start all -d  # 新版本更新了运行脚本，使用方式./jms start|stop|status|restart all  后台运行添加 -d 参数
+#运行不报错，请浏览器访问 http://192.168.60.6:8080/ 默认账号: admin 密码: admin 
+
+---------安装 SSH Server 和 WebSocket Server: Coco ---------
+#下载或 Clone 项目
+cd /opt
+source /opt/py3/bin/activate
+git clone https://github.com/jumpserver/coco.git && cd coco && git checkout master
+echo "source /opt/py3/bin/activate" > /opt/coco/.env  # 进入 coco 目录时将自动载入 python 虚拟环境
+# 首次进入 coco 文件夹会有提示，按 y 即可
+# Are you sure you want to allow this? (y/N) y
+
+#安装依赖
+$ cd /opt/coco/requirements
+$ yum -y  install $(cat rpm_requirements.txt)
+$ pip install -r requirements.txt -i https://pypi.python.org/simple
+
+#修改配置文件并运行
+cd /opt/coco
+cp conf_example.py conf.py 
+vim conf.py
+
+./cocod start -d
+# 新版本更新了运行脚本，使用方式./cocod start|stop|status|restart  后台运行请添加 -d 参数
+#启动成功后去Jumpserver 会话管理-终端管理,接受coco的注册
+
+---------------安装 Web Terminal 前端: Luna-----------
+#解压安装 Luna
+cd /opt
+wget https://github.com/jumpserver/luna/releases/download/1.4.1/luna.tar.gz
+tar xvf luna.tar.gz
+chown -R root:root luna
+
+#Docker安装 Windows 支持组件
+yum remove docker-latest-logrotate docker-logrotate docker-selinux dockdocker-engine
+yum install -y yum-utils device-mapper-persistent-data lvm2
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+rpm --import http://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+yum makecache fast
+yum -y install docker-ce
+systemctl start docker
+systemctl status docker
+
+#下载安装启动 Guacamole.默认的guacamole 端口是 8081，
+
+docker run --name jms_guacamole -d -p 8081:8080 -v /opt/guacamole/key:/config/guacamole/key -e JUMPSERVER_KEY_DIR=/config/guacamole/key -e JUMPSERVER_SERVER=http://192.168.60.6 jumpserver/guacamole:latest
+docker run --name jms_guacamole_windows -d -p 8081:8080 -v /opt/guacamole/key:/config/guacamole/key -e JUMPSERVER_KEY_DIR=/config/guacamole/key -e JUMPSERVER_SERVER=http://192.168.60.6 registry.jumpserver.org/public/guacamole:latest
+docker run --name jms_guacamole_windows -d -p 8080:8080 -v /opt/guacamole/key:/config/guacamole/key -e JUMPSERVER_KEY_DIR=/config/guacamole/key -e JUMPSERVER_SERVER=http://192.168.60.6 registry.jumpserver.org/public/guacamole:latest
+
+
+#启动成功后去Jumpserver 会话管理-终端管理，接受[Gua]开头的一个注册
+
+----配置 Nginx ----
+yum -y install nginx
+
+vim /etc/nginx/nginx.conf
+server {
+    listen 80;  # 代理端口，以后将通过此端口进行访问，不再通过8080端口
+    client_max_body_size 100m;  # 录像上传大小限制
+
+    location /luna/ {
+        try_files $uri / /index.html;
+        alias /opt/luna/;  # luna 路径，如果修改安装目录，此处需要修改
+    }
+    location /media/ {
+        add_header Content-Encoding gzip;
+        root /opt/jumpserver/data/;  # 录像位置，如果修改安装目录，此处需要修改
+    }
+   location /static/ {
+        root /opt/jumpserver/data/;  # 静态资源，如果修改安装目录，此处需要修改
+    }
+    location /socket.io/ {
+        proxy_pass       http://localhost:5000/socket.io/;  # 如果coco安装在别的服务器，请填写它的ip
+        proxy_buffering off;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        access_log off;
+    }
+    location /guacamole/ {
+        proxy_pass       http://localhost:8081/;  # 如果guacamole安装在别的服务器，请填写它的ip
+        proxy_buffering off;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $http_connection;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        access_log off;
+    }
+    location / {
+        proxy_pass http://localhost:8080;  # 如果jumpserver安装在别的服务器，请填写它的ip
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+	error_page 404 /404.html;
+        location = /40x.html {
+    }
+
+    error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+    }
+}
+-------------------------
+systemctl restart nginx
+systemctl enable nginx
+
+
+#/bin/bash
+#
+cd /opt
+python3 -m venv py3
+source /opt/py3/bin/activate
+cd /opt/jumpserver
+./jms start all -d
+cd /opt/coco
+./cocod start -d
+docker start jms_guacamole
